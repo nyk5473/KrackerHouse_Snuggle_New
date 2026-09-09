@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>KRACKER &#215; SNUGGLE APP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* NATIVE APP RESET & VARS */
+    :root {
+      --bg: #121212;
+      --surface: #1E1E1E;
+      --primary: #F25C05;
+      --text: #FFFFFF;
+      --muted: #A0A0A0;
+      --border: #2A2A2A;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { 
+      background: var(--bg); color: var(--text); 
+      overflow: hidden; /* App Shell prevents body scroll */
+      width: 100vw; height: 100dvh; display: flex; justify-content: center;
+    }
+    
+    /* APP SHELL CONTAINER */
+    #app-container {
+      width: 100%; max-width: 480px; height: 100%;
+      position: relative; display: flex; flex-direction: column;
+      background: var(--bg); box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    /* APP HEADER (TOP BAR) */
+    .app-header {
+      height: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; background: rgba(18,18,18,0.85); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border); z-index: 100; position: absolute; top: 0; width: 100%;
+    }
+    .app-header .title { font-size: 16px; font-weight: 900; letter-spacing: 0.05em; }
+    .app-header .icon { font-size: 24px; cursor: pointer; color: var(--text); }
+
+    /* SCROLLABLE BODY */
+    .app-body {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding-top: 56px; padding-bottom: 140px; /* Space for bottom nav & sticky btn */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* HERO BANNER */
+    .hero-banner {
+      width: 100%; aspect-ratio: 16/9; position: relative;
+    }
+    .hero-banner img { width: 100%; height: 100%; object-fit: cover; }
+    .hero-overlay {
+      position: absolute; inset: 0; background: linear-gradient(to top, rgba(18,18,18,1) 0%, transparent 60%);
+      display: flex; flex-direction: column; justify-content: flex-end; padding: 24px 16px;
+    }
+    .hero-title { font-size: 28px; font-weight: 900; margin-bottom: 12px; line-height: 1.2; }
+    
+    /* APP SECTIONS */
+    .app-section { padding: 24px 16px; border-bottom: 8px solid #000; }
+    .section-title { font-size: 18px; font-weight: 900; margin-bottom: 16px; }
+
+    /* TICKETING CARD (PRE-REG) */
+    .ticket-card {
+      background: var(--surface); border-radius: 16px; padding: 20px;
+      border: 1px solid var(--border);
+    }
+    .ticket-badge { background: var(--primary); font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+    .ticket-btn {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #2C2C2C; padding: 16px; border-radius: 12px; margin-top: 12px;
+      font-size: 15px; font-weight: 700; text-decoration: none; color: var(--text);
+    }
+    .ticket-btn.primary { background: var(--primary); }
+
+    /* HORIZONTAL SCROLL LIST (ZONES) */
+    .h-scroll {
+      display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+      padding-bottom: 12px; margin: 0 -16px; padding-left: 16px; padding-right: 16px;
+    }
+    .h-scroll::-webkit-scrollbar { display: none; }
+    .zone-card {
+      flex: 0 0 240px; scroll-snap-align: start;
+      background: var(--surface); border-radius: 12px; overflow: hidden;
+    }
+    .zone-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+    .zone-info { padding: 16px; }
+    .zone-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .zone-desc { font-size: 12px; color: var(--muted); }
+
+    /* GRID LIST (GOODS) */
+    .goods-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .goods-card { background: var(--surface); border-radius: 12px; overflow: hidden; }
+    .goods-card img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+    .goods-info { padding: 12px; }
+    .goods-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .goods-price { font-size: 13px; color: var(--primary); font-weight: 700; }
+
+    /* STICKY BOTTOM BTN */
+    .sticky-btn-wrap {
+      position: absolute; bottom: 64px; left: 0; width: 100%; padding: 12px 16px;
+      background: linear-gradient(to top, var(--bg) 60%, transparent); z-index: 90;
+    }
+    .sticky-btn {
+      display: block; width: 100%; background: var(--primary); color: #fff;
+      text-align: center; padding: 16px; border-radius: 14px; font-weight: 900;
+      font-size: 16px; text-decoration: none;
+    }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      position: absolute; bottom: 0; width: 100%; height: 60px;
+      background: rgba(30,30,30,0.95); backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border); display: flex; justify-content: space-around;
+      align-items: center; z-index: 100; overflow-x: auto;
+    }
+    .bottom-nav::-webkit-scrollbar { display: none; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 10px; font-weight: 700; flex: 0 0 60px; cursor: pointer; }
+    .nav-item.active { color: var(--primary); }
+    .nav-icon { font-size: 20px; }
+    
+    /* PAGE VIEWS */
+    .page-view { display: none; }
+    .page-view.active { display: block; }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+    
+    <!-- TOP APP BAR -->
+    <header class="app-header">
+      <div class="icon">&#8592;</div>
+      <div class="title">KRACKER &#215; SNUGGLE</div>
+      <div class="icon">&#9776;</div>
+    </header>
+
+    <!-- MAIN SCROLLABLE AREA -->
+    <main class="app-body" id="app-body-scroll">
+      
+      <!-- HOME PAGE -->
+      <div id="page-home" class="page-view active">
+
+      <!-- HERO BANNER -->
+      <div class="hero-banner">
+        <img src="../images/kracker_laundry_storefront.jpg" onerror="this.src='../images/kracker_basic_t_shirts_yellow.jpg';" alt="Hero Banner">
+        <div class="hero-overlay">
+          <h1 class="hero-title">have a good time.<br>Pop-up Store</h1>
+          <div style="font-size: 13px; color: var(--muted);">크래커하우스와 스너글의 한정 콜라보레이션</div>
+        </div>
+      </div>
+
+      <!-- TICKETING SECTION -->
+      <div class="app-section" id="section-prereg">
+        <h2 class="section-title">Ticket &amp; Event</h2>
+        <div class="ticket-card">
+          <span class="ticket-badge">CHECK-IN</span>
+          <div style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">현장 체크인 및 사전예약 안내</div>
+          <div style="font-size: 12px; color: var(--muted);">방문 예약 시 우선 입장 및 특별 굿즈를 증정합니다.</div>
+          
+          <a href="#" class="ticket-btn primary">
+            <span>🎟️ 팝업 체크인 안내</span>
+            <span>&#8594;</span>
+          </a>
+          <a href="#" class="ticket-btn">
+            <span>📱 모바일 사전예약</span>
+            <span>&#8594;</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ZONES (HORIZONTAL SCROLL) -->
+      <div class="app-section" id="section-zones">
+        <h2 class="section-title">Experience Zones</h2>
+        <div class="h-scroll">
+          <div class="zone-card">
+            <img src="../images/zone_card_01.jpg" onerror="this.style.background='#333';" alt="Zone">
+            <div class="zone-info">
+              <div class="zone-title">01. 취향 테스트존</div>
+              <div class="zone-desc">나만의 스너글 향기 취향 찾기</div>
+            </div>
+          </div>
+          <div class="zone-card">
+            <img src="../images/zone_001.png" onerror="this.style.background='#333';" alt="Zone">
+            <div class="zone-info">
+              <div class="zone-title">02. 세탁기 포토부스</div>
+              <div class="zone-desc">특별한 순간을 기록하세요</div>
+            </div>
+          </div>
+          <div class="zone-card">
+            <img src="../images/zone_card_03.jpg" onerror="this.style.background='#333';" alt="Zone">
+            <div class="zone-info">
+              <div class="zone-title">03. 굿즈존</div>
+              <div class="zone-desc">한정판 스페셜 굿즈 쇼룸</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GOODS (GRID) -->
+      <div class="app-section" id="section-goods" style="border-bottom: none;">
+        <h2 class="section-title">Exclusive Goods</h2>
+        <div class="goods-grid">
+          <div class="goods-card">
+            <img src="../images/mock_product_1.png" onerror="this.style.background='#333';" alt="Goods">
+            <div class="goods-info">
+              <div class="goods-title">옐로우 티셔츠</div>
+              <div class="goods-price">&#8361;42,000</div>
+            </div>
+          </div>
+          <div class="goods-card">
+            <img src="../images/mock_product_2.png" onerror="this.style.background='#333';" alt="Goods">
+            <div class="goods-info">
+              <div class="goods-title">피그먼트 티셔츠</div>
+              <div class="goods-price">&#8361;45,000</div>
+            </div>
+          </div>
+          <div class="goods-card">
+            <img src="../images/snuggle_vintage_vanilla.jpg" onerror="this.style.background='#fff';" alt="Goods">
+            <div class="goods-info">
+              <div class="goods-title">스너글 섬유유연제</div>
+              <div class="goods-price">&#8361;16,500</div>
+            </div>
+          </div>
+          <div class="goods-card">
+            <img src="../images/kracker_tote_bag.jpg" onerror="this.style.background='#333';" alt="Goods">
+            <div class="goods-info">
+              <div class="goods-title">캔버스 토트백</div>
+              <div class="goods-price">&#8361;38,000</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </main>
+
+    <!-- STICKY BOTTOM BUTTON -->
+    <div class="sticky-btn-wrap">
+      <a href="#" onclick="navigate('prereg'); return false;" class="sticky-btn">지금 바로 사전예약하기</a>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="bottom-nav">
+      <a onclick="navigate('home')" class="nav-item active" id="tab-home"><span class="nav-icon">🏠</span><span>홈</span></a>
+      <a onclick="navigate('prereg')" class="nav-item" id="tab-prereg"><span class="nav-icon">🎟️</span><span>사전등록</span></a>
+      <a onclick="navigate('goods')" class="nav-item" id="tab-goods"><span class="nav-icon">🛍️</span><span>굿즈</span></a>
+      <a onclick="navigate('laundry')" class="nav-item" id="tab-laundry"><span class="nav-icon">📷</span><span>사진방</span></a>
+      <a onclick="navigate('zones')" class="nav-item" id="tab-zones"><span class="nav-icon">📍</span><span>존 안내</span></a>
+      <a href="https://nyk5473.github.io/snuggle-scent-quiz/" target="_blank" class="nav-item" id="tab-scent"><span class="nav-icon">🪥</span><span>향테스트</span></a>
+    </nav>
+    
+  </div>
+
+  <script>
+    const pages = { home: document.getElementById('page-home') };
+    const tabs = {
+      home: document.getElementById('tab-home'),
+      prereg: document.getElementById('tab-prereg'),
+      goods: document.getElementById('tab-goods'),
+      laundry: document.getElementById('tab-laundry'),
+      zones: document.getElementById('tab-zones'),
+    };
+    
+    function navigate(target) {
+      // Clear all active tabs
+      document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+      
+      if (target === 'home') {
+        document.getElementById('app-body-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+        tabs.home.classList.add('active');
+      } else if (target === 'prereg') {
+        const el = document.getElementById('section-prereg');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        tabs.prereg.classList.add('active');
+      } else if (target === 'goods') {
+        const el = document.getElementById('section-goods');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        tabs.goods.classList.add('active');
+      } else if (target === 'laundry') {
+        tabs.laundry.classList.add('active');
+        window.location.href = '../sns_event.html';
+      } else if (target === 'zones') {
+        const el = document.getElementById('section-zones');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        tabs.zones.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>
